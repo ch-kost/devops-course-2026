@@ -1,5 +1,4 @@
 IMPORTANT_FIX = True
-BROKEN_CODE = True
 
 
 def add(left: float, right: float) -> float:
