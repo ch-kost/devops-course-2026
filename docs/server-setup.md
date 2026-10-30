@@ -4,8 +4,14 @@
 VirtualBox 7.2, Ubuntu Server 24.04 LTS (полная установка), 2048 МБ,
 2 виртуальных CPU, динамический VDI 25 ГБ. Исходный пользователь `student`.
 SATA использует два порта: диск и оптический привод. В параметрах ядра этого
-стенда задан `module_blacklist=raid456`: RAID не используется, корень — ext4.
-Этот параметр сохраняется в `/etc/default/grub` и снимке 01-clean-install.
+стенда задан `module_blacklist=raid456,raid6_pq`: RAID не используется, корень — ext4.
+Параметр сохранён в `/etc/default/grub` после проверки повторной загрузки.
+Для совместимости с Hyper-V в этой VM отключены AVX и AVX2:
+```
+VBoxManage setextradata devops-vm VBoxInternal/CPUM/IsaExts/AVX 0
+VBoxManage setextradata devops-vm VBoxInternal/CPUM/IsaExts/AVX2 0
+```
+Два CPU сохранены. Сервер загружается в multi-user.target без графического сеанса.
 
 ## 2. Сетевые интерфейсы
 `enp0s3`: NAT, DHCP; выход к репозиториям Ubuntu и Docker.
@@ -23,13 +29,14 @@ NAT TCP 127.0.0.1:2222 → guest:2222. В начальном снимке guest:
 Конфигурация хоста `~/.ssh/config`:
 ```
 Host devops
-    HostName 127.0.0.1
+    HostName 192.168.56.101
     Port 2222
     User devops
     IdentityFile ~/.ssh/devops_vm
     IdentitiesOnly yes
 ```
 Закрытый ключ остаётся на хосте; сервер получает только `.pub`.
+Для управления используется Host-only; NAT-проброс оставлен как резервный путь.
 
 ## 4. Учётные записи
 `student`: исходная установка, sudo; после настройки SSH вход запрещён AllowUsers.
