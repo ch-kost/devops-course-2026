@@ -3,6 +3,9 @@
 ## 1. Параметры машины
 VirtualBox 7.2, Ubuntu Server 24.04 LTS (полная установка), 2048 МБ,
 2 виртуальных CPU, динамический VDI 25 ГБ. Исходный пользователь `student`.
+SATA использует два порта: диск и оптический привод. В параметрах ядра этого
+стенда задан `module_blacklist=raid456`: RAID не используется, корень — ext4.
+Этот параметр сохраняется в `/etc/default/grub` и снимке 01-clean-install.
 
 ## 2. Сетевые интерфейсы
 `enp0s3`: NAT, DHCP; выход к репозиториям Ubuntu и Docker.
@@ -10,6 +13,9 @@ VirtualBox 7.2, Ubuntu Server 24.04 LTS (полная установка), 2048 
 В netplan у enp0s8 заданы `use-routes: false`, `use-dns: false`.
 Windows hosts: `192.168.56.101 devops.local api.devops.local`.
 Адрес необходимо сверять командой `ip -br address` после смены DHCP-аренды.
+За NIC 2 этой VM закреплён адрес 192.168.56.101 в DHCP VirtualBox:
+`VBoxManage dhcpserver modify --interface="VirtualBox Host-Only Ethernet Adapter" --vm=devops-vm --nic=2 --fixed-address=192.168.56.101`.
+MTU NAT на этом хосте — 1280. Другие сетевые интерфейсы Windows не менялись.
 
 ## 3. Правило проброса портов
 NAT TCP 127.0.0.1:2222 → guest:2222. В начальном снимке guest:22;
