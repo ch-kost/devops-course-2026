@@ -97,3 +97,26 @@ sudo chmod 644 /etc/ssl/certs/devops.crt
 Ключ root:root. Доставка: сначала rsync --dry-run, затем фактическая доставка
 с `--chmod=D755,F644`. Перед reload всегда `sudo nginx -t`.
 
+
+## 9. Контейнеризация
+Docker CE установлен из официального apt-репозитория download.docker.com;
+docker-ce, docker-ce-cli, containerd.io, buildx и Compose plugin.
+Минимальная версия Engine 28; фактическую версию проверяет `docker version`.
+`sudo usermod -aG docker devops`, затем новая сессия SSH.
+Проект `~/app`, исходники в `app/`. `.env` создаётся только на сервере:
+```
+cd ~/app
+umask 077
+printf 'POSTGRES_DB=app\nPOSTGRES_USER=app\nPOSTGRES_PASSWORD=%s\nDB_HOST=db\n' "$(openssl rand -hex 16)" > .env
+chmod 600 .env
+docker compose up -d --build
+```
+Владелец devops, права 600. Никогда не выводить `docker compose config` с секретом.
+PostgreSQL16-alpine, том app_db_data, pg_isready; DB порт не публикуется.
+Приложение python:3.12-slim/gunicorn работает непривилегированно,
+публикуется только 127.0.0.1:5000. nginx `/app/` → http://127.0.0.1:5000/,
+заголовки Host/X-Real-IP/X-Forwarded-For/X-Forwarded-Proto.
+Аудит: `cd ~/devops-course-2026 && scripts/audit.sh`, ожидается код 0.
+Для sudo в аудите сначала выполнить `sudo -v` в интерактивной SSH-сессии.
+
+Engine: 29.9.2. Для опытов down/down -v использован отдельный проект report-pr7 на 127.0.0.1:15000, том report-pr7_db_data. Рабочий app_db_data не удалялся.

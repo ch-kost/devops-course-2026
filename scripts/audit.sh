@@ -20,5 +20,12 @@ check 'nginx syntax' 0 "$(sudo nginx -t >/dev/null 2>&1; echo $?)"
 check 'Certificate valid for 30 days' 0 "$(openssl x509 -checkend "$(( ${CERT_MIN_DAYS:-30} * 86400 ))" -noout -in /etc/ssl/certs/devops.crt >/dev/null; echo $?)"
 check 'No world-writable site files' '' "$(find /var/www/devops-site -perm -o+w -print)"
 check 'TLS private key permissions' 600 "$(sudo stat -c '%a' /etc/ssl/private/devops.key)"
+echo '[5] Containers'
+check 'Docker active' active "$(systemctl is-active docker)"
+db_id=$(docker compose --project-directory "$HOME/app" ps -q db)
+check 'Postgres healthy' healthy "$(docker inspect -f '{{.State.Health.Status}}' "$db_id" 2>/dev/null)"
+bad=$(ss -H -ltn | awk '$4 ~ /:(5000|5432)$/ && $4 !~ /^127\.0\.0\.1:/ {print $4}')
+check 'No external app/database listeners' '' "$bad"
+check 'Application env permissions' 600 "$(stat -c '%a' "$HOME/app/.env")"
 echo "Passed: $PASS; failed: $FAIL"
 [[ $FAIL -eq 0 ]]
