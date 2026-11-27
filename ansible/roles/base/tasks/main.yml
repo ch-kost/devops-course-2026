@@ -25,12 +25,13 @@
     architectures: [amd64]
     signed_by: https://download.docker.com/linux/ubuntu/gpg
     state: present
+  register: docker_repo
 
 - name: Install Docker Engine
   ansible.builtin.apt:
     name: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
     state: present
-    update_cache: true
+    update_cache: "{{ docker_repo.changed }}"
     update_cache_retries: 3
 
 - name: Enable Docker service
