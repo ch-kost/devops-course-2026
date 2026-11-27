@@ -1,0 +1,6 @@
+---
+app_image: "ghcr.io/ch-kost/devops-ci-app"
+app_tag: "51a8ddf1ba5f5c3d8754cd1d32eb70b42c28fcc7"
+app_container_name: "devops-ci-app"
+app_host_port: 5000
+app_internal_port: 5000

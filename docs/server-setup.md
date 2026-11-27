@@ -120,3 +120,29 @@ PostgreSQL16-alpine, том app_db_data, pg_isready; DB порт не публи
 Для sudo в аудите сначала выполнить `sudo -v` в интерактивной SSH-сессии.
 
 Engine: 29.9.2. Для опытов down/down -v использован отдельный проект report-pr7 на 127.0.0.1:15000, том report-pr7_db_data. Рабочий app_db_data не удалялся.
+
+## Ansible
+
+Управляющий узел — Ubuntu 24.04 в WSL, каталог ~/devops-course-2026/ansible.
+Управляемый узел — devops-vm-ansible, отдельная копия снимка 01-clean-install.
+Адрес Host-only — 192.168.56.102, порт SSH 22.
+
+Bootstrap использует student и пароль по запросу. Prod подключается как devops
+по ключу ~/.ssh/devops_vm и использует sudo без интерактивного запроса.
+Проверка ключа сервера включена. Ключи хранятся на управляющем узле.
+
+Роль base ставит Docker из подписанного репозитория Docker и зависимости.
+Роль ssh создаёт пользователя, устанавливает ключ и настраивает SSH и UFW.
+Роль nginx включает reverse proxy на 80. Роль app загружает образ,
+запускает контейнер и проверяет /health.
+
+Образ: `ghcr.io/ch-kost/devops-ci-app:51a8ddf1ba5f5c3d8754cd1d32eb70b42c28fcc7`.
+Порт контейнера 5000, на VM доступен по 127.0.0.1:5000.
+Внешняя проверка на управляющем узле: `curl --fail http://192.168.56.102/health`.
+
+```sh
+ansible-galaxy collection install -r requirements.yml
+ansible-playbook -i inventory/bootstrap.ini site.yml --ask-pass --ask-become-pass
+ansible-playbook site.yml
+ansible-playbook verify.yml
+```
